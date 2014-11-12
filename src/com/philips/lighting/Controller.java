@@ -26,13 +26,16 @@ public class Controller {
 
 	private LightsOffScheduler los;
 	
-	private boolean lightOffSchedulerIsActive;
+	boolean lightOffSchedulerIsActive = HueProperties.getLightOffSchedulerIsActive();
 
 	public Controller() {
 		this.phHueSDK = PHHueSDK.getInstance();
 		this.instance = this;
 
 		System.out.println(connectToLastKnownAccessPoint());
+		HueProperties.loadProperties();
+    	boolean x = HueProperties.getLightOffSchedulerIsActive();
+    	System.out.println(x + "!!!!!!!!!");
 	}
 
 	public void findBridges() {
@@ -61,12 +64,14 @@ public class Controller {
 		@Override
 		public void onBridgeConnected(PHBridge bridge) {
 			phHueSDK.setSelectedBridge(bridge);
-			phHueSDK.enableHeartbeat(bridge, PHHueSDK.HB_INTERVAL);
+//			phHueSDK.enableHeartbeat(bridge, PHHueSDK.HB_INTERVAL);
+			phHueSDK.enableHeartbeat(bridge, 7000);
 			String username = HueProperties.getUsername();
 			String lastIpAddress =  bridge.getResourceCache().getBridgeConfiguration().getIpAddress();   
 			System.out.println("On connected: IP " + lastIpAddress);
 			HueProperties.storeUsername(username);
 			HueProperties.storeLastIPAddress(lastIpAddress);
+			HueProperties.storeLightOffSchedulerIsActive(false);
 			HueProperties.saveProperties();
 
 			// Update the GUI.
@@ -98,24 +103,38 @@ public class Controller {
 		public void onConnectionResumed(PHBridge arg0) {
 			PHBridge bridge = phHueSDK.getSelectedBridge();
 			PHBridgeResourcesCache cache = bridge.getResourceCache();
-
+			
 			List<PHLight> allLights = cache.getAllLights();
-
+			
 			for (PHLight light : allLights) {
 				PHLightState lightState = new PHLightState();
 				los = new LightsOffScheduler(light, lightState, bridge);
 				//				System.out.println("Light Name: " + light.getName());
+				System.out.println(light.getLastKnownLightState().getBrightness());
 				if(light.getName().equalsIgnoreCase("front_flood") &&
 						light.getLastKnownLightState().isReachable()) {
-					System.out.println(light.getName() + " is on: " + light.getLastKnownLightState().isOn());
-					if(los.isWithinSchedule() && killSwitchOn && !lightOffSchedulerIsActive) {
-						lightOffSchedulerIsActive = true;
-						los.start();
-					}else if(!los.isWithinSchedule()) {
-						lightOffSchedulerIsActive = false;
-					}else if(light.getLastKnownLightState().isOn()) {
-						lightOffSchedulerIsActive = false;
+					HueProperties.loadProperties();
+					if(los.isWithinSchedule()) {				
+						// problem is in this conditional!!!!
+						System.out.println("BEFORE!!!!!!!!!______lightOffSchedulerIsActiive: " + HueProperties.getLightOffSchedulerIsActive());
+						if(killSwitchOn && !HueProperties.getLightOffSchedulerIsActive() 
+								&& light.getLastKnownLightState().isOn()) {
+							System.out.println("\nStarting new Thread from los.start()...\n");
+							los.start();
+							HueProperties.storeLightOffSchedulerIsActive(true);
+							System.out.println("SET ACTIVE TO TRUE!!!!!!!!!!!");
+							HueProperties.saveProperties();
+							System.out.println("lightOffSchedulerIsActiive: " + HueProperties.getLightOffSchedulerIsActive());
+						}
 					}
+				}
+				System.out.println("!!!!!" + light.getLastKnownLightState().getBrightness());
+				// !!!! 125 is the brightness setting!!! ACCOUNT FOR THIS AND CHANGE IT TO A UNIVERSAL VAR
+				if(!light.getLastKnownLightState().isOn() || (lightOffSchedulerIsActive && light.getLastKnownLightState().getBrightness() > 125)) {
+					// Physical state of light was turned off and unreachable.
+					System.out.println("\nPhysical state of light was turned off and unreachable.\n");
+					HueProperties.storeLightOffSchedulerIsActive(false);
+					HueProperties.saveProperties();
 				}
 			}
 		}

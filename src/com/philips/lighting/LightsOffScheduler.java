@@ -34,7 +34,7 @@ public class LightsOffScheduler extends Thread implements Scheduler{
 			cal.setTime(new Date());
 			
 			
-			setLightOffTimerSchedule("23:00", "04:00");
+			setLightOffTimerSchedule("21:00", "04:00");
 			System.out.println("Now: " + now);
 			System.out.println("start time: " + startTimedLightOffTime);
 			System.out.println("end time: " + endTimedLightOffTime + "\n");
@@ -45,27 +45,27 @@ public class LightsOffScheduler extends Thread implements Scheduler{
 		}
 	}
 
-	public LightsOffScheduler() {
-		
-		try {
-			Calendar cal = Calendar.getInstance();
-			now = formatter.parse(formatter.format(new Date()));
-			cal.setTime(new Date());
-			
-			
-			setLightOffTimerSchedule("23:00", "04:00");
-			System.out.println("Now: " + now);
-			if(isCarryOverEndTimeOneDay()) {
-				
-			}
-			System.out.println("start time: " + startTimedLightOffTime);
-			System.out.println("end time: " + endTimedLightOffTime);
-//			this.start();
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+//	public LightsOffScheduler() {
+//		
+//		try {
+//			Calendar cal = Calendar.getInstance();
+//			now = formatter.parse(formatter.format(new Date()));
+//			cal.setTime(new Date());
+//			
+//			
+//			setLightOffTimerSchedule("23:00", "04:00");
+//			System.out.println("Now: " + now);
+//			if(isCarryOverEndTimeOneDay()) {
+//				
+//			}
+//			System.out.println("start time: " + startTimedLightOffTime);
+//			System.out.println("end time: " + endTimedLightOffTime);
+////			this.start();
+//		} catch (ParseException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
 
 	@Override
 	public boolean isCarryOverEndTimeOneDay() {
@@ -92,15 +92,18 @@ public class LightsOffScheduler extends Thread implements Scheduler{
 			midnightCal.set(Calendar.MINUTE, 0);
 			midnightCal.set(Calendar.SECOND, 0);
 			midnightCal.set(Calendar.MILLISECOND, 0);
+//			midnightCal.add(Calendar.DATE, 1);
 			Date midnight;
 			midnight = midnightCal.getTime();
+			
+			System.out.println("Midnight: " + midnight);
 			// If current date and time is after midnight of today, add a day to 
 			// representation of now.
 			if(new Date().after(midnight) && !nowUpdated) {
 				cal.setTime(now);
 				cal.add(Calendar.DATE, 1);
 				this.now = cal.getTime();
-				System.out.println("HERE!!!");
+				System.out.println("new date IS After midnight!!!");
 				nowUpdated = true;
 			}
 		} catch (ParseException e) {
@@ -144,7 +147,7 @@ public class LightsOffScheduler extends Thread implements Scheduler{
 			lightState.setBrightness(125);
 			bridge.updateLightState(light, lightState);
 //			Thread.sleep(1200000);	// delay between dim and light off event.
-			Thread.sleep(20000);
+			Thread.sleep(15000);
 			lightState.setOn(false);
 			bridge.updateLightState(light, lightState);
 		} catch (InterruptedException e) {

@@ -23,14 +23,33 @@ public final class HueProperties {
     private static final String LAST_CONNECTED_IP   = "LastIPAddress";
     private static final String USER_NAME           = "WhiteListUsername";
     private static final String PROPS_FILE_NAME     = "MyHue.properties";
+    private static final String LIGHTS_OFF_SCHEDULER_IS_ACTIVE = "lightOffSchedulerIsActive";
     private static Properties props=null;
 
     private HueProperties() {
     }
     
+    public static void storeLightOffSchedulerIsActive(boolean lightOffSchedulerIsActive) {
+    	String boolStr = Boolean.toString(lightOffSchedulerIsActive);
+    	props.setProperty(LIGHTS_OFF_SCHEDULER_IS_ACTIVE, boolStr);
+    	saveProperties();
+    }
+    
+    public static boolean getLightOffSchedulerIsActive() {
+    	props.getProperty(LIGHTS_OFF_SCHEDULER_IS_ACTIVE);
+        boolean boolVal = Boolean.parseBoolean(props.getProperty(LIGHTS_OFF_SCHEDULER_IS_ACTIVE));
+        System.out.println("props.getProperty(LIGHTS_OFF_SCHEDULER_IS_ACTIVE): " + props.getProperty(LIGHTS_OFF_SCHEDULER_IS_ACTIVE));
+        System.out.println("In Hue Props, boolVal: " + boolVal);
+        return boolVal;
+    }
+    
     public static void storeLastIPAddress(String ipAddress) {
         props.setProperty(LAST_CONNECTED_IP, ipAddress);
         saveProperties();
+    }
+    
+    public static String getLastConnectedIP() {
+        return props.getProperty(LAST_CONNECTED_IP);
     }
 
     /**
@@ -52,10 +71,6 @@ public final class HueProperties {
             storeUsername(username); 
         }
         return username;
-    }
-
-    public static String getLastConnectedIP() {
-        return props.getProperty(LAST_CONNECTED_IP);
     }
     
     public static void loadProperties() {
